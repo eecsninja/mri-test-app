@@ -1,0 +1,15 @@
+{
+  "manifest_version": 2,
+  "name": "Butane test",
+  "version": "1",
+  "permissions": [
+    "alarms",
+    "serviceCommsPrivate"
+  ],
+  "app": {
+    "background": {
+      "scripts": ["background.js"]
+    }
+  },
+  "minimum_chrome_version": "28"
+}

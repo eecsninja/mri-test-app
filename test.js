@@ -2,16 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-goog.require('proto.videoconf.gvc.hotrodapi.CommandId');
-goog.require('proto.videoconf.gvc.hotrodapi.VideoConfMessageProto');
-goog.require('proto.videoconf.gvc.hotrodapi.VideoConfResponseProto');
-goog.require('proto.videoconf.gvc.hotrodapi.VideoConfResponseProto.CPUTemperatureResponse');
+function ab2str(buf) {
+  return String.fromCharCode.apply(null, new Uint16Array(buf));
+}
 
-function updateTemperatureField(fieldName, temps) {
-  var output = '';
-  for (var i = 0; i < temps.length; i++)
-    output += (temps[i] / 1000).toFixed(3) + '\n';
-  document.getElementById(fieldName).innerText = output;
+function str2ab(str) {
+  var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
+  var bufView = new Uint16Array(buf);
+  for (var i=0, strLen=str.length; i<strLen; i++) {
+    bufView[i] = str.charCodeAt(i);
+  }
+  return buf;
 }
 
 var fieldName = 'result';
@@ -29,24 +30,18 @@ function sendDataResponseHandler(response) {
     return;
   }
   var responseData = response[1];
-  var responseProto =
-      proto.videoconf.gvc.hotrodapi.VideoConfResponseProto.
-          deserializeBinary(responseData);
-  var tempList = responseProto.getCpuTemperature().getTemperatureList();
-  console.log(status, tempList);
-  updateTemperatureField(fieldName, tempList);
+  var responseStr = ab2str(responseData);
+  console.log(status, responseStr);
+  document.getElementById(fieldName).innerText = responseStr;
 }
 
 var alarmName = 'update';
 chrome.alarms.onAlarm.addListener(function(alarm) {
   console.log(alarm.name);
   if (alarm.name == alarmName) {
-    var sendProto = new proto.videoconf.gvc.hotrodapi.VideoConfMessageProto();
-    sendProto.setCommand(
-        proto.videoconf.gvc.hotrodapi.CommandId.GET_CPU_TEMPERATURE);
-    chrome.serviceCommsPrivate.sendData(
-        sendProto.serializeBinary().buffer,
-        sendDataResponseHandler);
+    var msg = 'hello world!';
+    var data = str2ab(msg);
+    chrome.serviceCommsPrivate.sendData(data, sendDataResponseHandler);
   }
 });
 
